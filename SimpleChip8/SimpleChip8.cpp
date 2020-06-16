@@ -12,10 +12,16 @@ const int scale_factor = 8;
 
 int main(int argc, char* argv[])
 {
-    SDL_Window* window = initGraphics();
+    if(argc < 2)
+	{
+		std::cout << "Usage: SimpleChip8.exe <chip8rom>\n\n";
+		return 1;
+	}
+	if(!myChip8.loadApplication(argv[1]))		
+		return 1;
+    std::cout << "Loaded program to RAM\n";
 
-    myChip8.loadApplication("C:\\Users\\jjask\\Downloads\\myChip8-bin-src\\sirpinski.c8");
-    std::cout << "Loaded program to RAM";
+    SDL_Window* window = initGraphics();
 
     bool quit = false;
     SDL_Event e;

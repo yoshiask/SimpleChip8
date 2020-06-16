@@ -41,6 +41,4 @@ class chip8 {
 
         // Stack pointer
         unsigned short sp;
-
-        void initialize();
 };

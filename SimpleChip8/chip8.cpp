@@ -29,17 +29,6 @@ unsigned char chip8_fontset[80] =
 
 chip8::chip8()
 {
-	// empty
-    initialize();
-}
-
-chip8::~chip8()
-{
-	// empty
-}
-
-
-void chip8::initialize() {
     // Initialize registers and memory once
 
     pc     = 0x200;  // Program counter starts at 0x200
@@ -70,6 +59,11 @@ void chip8::initialize() {
     // Reset timers
     delay_timer = 0;
     sound_timer = 0;
+}
+
+chip8::~chip8()
+{
+	// empty
 }
 
 void chip8::emulateCycle()
