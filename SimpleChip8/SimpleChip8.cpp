@@ -1,7 +1,6 @@
 #include "SimpleChip8.h"
 #include "chip8.h"
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
 #include <cstdio>
 #include <iostream>

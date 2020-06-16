@@ -26,7 +26,7 @@ class chip8 {
         unsigned short opcode;
 
         // Registers
-        unsigned char V[0xF];
+        unsigned char V[16];
 
         // Instruction pointer
         unsigned short I;

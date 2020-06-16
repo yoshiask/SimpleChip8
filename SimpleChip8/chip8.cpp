@@ -87,6 +87,8 @@ void chip8::emulateCycle()
                     for (int i = 0; i < 64 * 32; i++) {
                         gfx[i] = 0;
                     }
+                    drawFlag = true;
+					pc += 2;
                 break;
  
                 case 0x000E: // 0x00EE: Returns from subroutine
@@ -101,7 +103,6 @@ void chip8::emulateCycle()
         break;
 
         case 0x1000: // 1NNN: Jumps to address NNN.
-            // TODO: Verify
             pc = opcode & 0xFFF;
         break;
 
@@ -167,39 +168,39 @@ void chip8::emulateCycle()
 
                 case 0x0004: // 8XY4: Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.
                     if (V[(opcode & 0x00F0) >> 4] > (0xFF - V[(opcode & 0x0F00) >> 8]))
-                        V[0xE] = 1; // Set the carry bit
+                        V[0xF] = 1; // Set the carry bit
                     else
-                        V[0xE] = 0;
+                        V[0xF] = 0;
                     V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
                     pc += 2; 
                 break;
 
                 case 0x0005: // 8XY5: VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
                     if (V[(opcode & 0x00F0) >> 4] > V[(opcode & 0x0F00) >> 8])
-                        V[0xE] = 0; // Unset the carry bit
+                        V[0xF] = 0; // Unset the carry bit
                     else
-                        V[0xE] = 1;
+                        V[0xF] = 1;
                     V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
                     pc += 2; 
                 break;
 
                 case 0x0006: // 8XY6: Stores the least significant bit of VX in VF and then shifts VX to the right by 1.
-                    V[0xE] = V[(opcode & 0x0F00) >> 8] & 0x1;
+                    V[0xF] = V[(opcode & 0x0F00) >> 8] & 0x1;
                     V[(opcode & 0x0F00) >> 8] >>= 1;
                     pc += 2; 
                 break;
 
                 case 0x0007: // 8XY7: Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
                     if (V[(opcode & 0x0F00) >> 8] > V[(opcode & 0x00F0) >> 4])
-                        V[0xE] = 0; // Unset the carry bit
+                        V[0xF] = 0; // Unset the carry bit
                     else
-                        V[0xE] = 1;
+                        V[0xF] = 1;
                     V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8];
                     pc += 2; 
                 break;
 
                 case 0x000E: // 8XYE: Stores the most significant bit of VX in VF and then shifts VX to the left by 1.
-                    V[0xE] = V[(opcode & 0x0F00) >> 8] >> 7;
+                    V[0xF] = V[(opcode & 0x0F00) >> 8] >> 7;
                     V[(opcode & 0x0F00) >> 8] <<= 1;
                     pc += 2; 
                 break;
@@ -226,7 +227,7 @@ void chip8::emulateCycle()
         break;
 
         case 0xC000: // CXNN: Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
-            V[(opcode & 0x0F00) >> 8] = (rand() % 256) & (opcode & 0x00FF);
+            V[(opcode & 0x0F00) >> 8] = (rand() % 0xFF) & (opcode & 0x00FF);
             pc += 2;
         break;
 
@@ -243,7 +244,7 @@ void chip8::emulateCycle()
             unsigned short height = opcode & 0x000F;
             unsigned short pixel;
 
-            V[0xE] = 0;
+            V[0xF] = 0;
             for (int yline = 0; yline < height; yline++)
             {
                 pixel = memory[I + yline];
@@ -252,7 +253,7 @@ void chip8::emulateCycle()
                     if((pixel & (0x80 >> xline)) != 0)
                     {
                         if(gfx[(x + xline + ((y + yline) * 64))] == 1)
-                            V[0xE] = 1;
+                            V[0xF] = 1;
                         gfx[x + xline + ((y + yline) * 64)] ^= 1;
                     }
                 }
@@ -284,13 +285,6 @@ void chip8::emulateCycle()
 
         case 0xF000:
             switch (opcode & 0x00FF) {
-                case 0x0033: // FX33: take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
-                    memory[I]     = V[(opcode & 0x0F00) >> 8] / 100;
-                    memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
-                    memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
-                    pc += 2;
-                break;
-
                 case 0x0007: // FX07: Sets VX to the value of the delay timer.
                     V[(opcode & 0x0F00) >> 8] = delay_timer;
                     pc += 2;
@@ -319,24 +313,34 @@ void chip8::emulateCycle()
 
                 case 0x0015: // FX15: Sets the delay timer to VX
                     delay_timer = V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                 break;
 
                 case 0x0018: // FX18: Sets the sound timer to VX
                     sound_timer = V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                 break;
 
                 case 0x001E: // FX1E: Adds VX to I. VF is set to 1 when there is a range overflow (I+VX>0xFFF), and to 0 when there isn't.
                     if (I + V[(opcode & 0x0F00) >> 8] > 0xFFF)
-                        V[0xE] = 1; // Set VF
+                        V[0xF] = 1; // Set VF
                     else
-                        V[0xE] = 0;
+                        V[0xF] = 0;
                     I += V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                 break;
 
 				case 0x0029: // FX29: Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font
 					I = V[(opcode & 0x0F00) >> 8] * 0x5;
 					pc += 2;
 				break;
+
+                case 0x0033: // FX33: take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+                    memory[I]     = V[(opcode & 0x0F00) >> 8] / 100;
+                    memory[I + 1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10;
+                    memory[I + 2] = (V[(opcode & 0x0F00) >> 8] % 100) % 10;
+                    pc += 2;
+                break;
 
 				case 0x0055: // FX55: Stores V0 to VX (including VX) in memory starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.
 					for (int o = 0; o <= ((opcode & 0x0F00) >> 8); o++) {
