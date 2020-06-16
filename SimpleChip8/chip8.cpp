@@ -1,11 +1,6 @@
 #include "chip8.h"
 #include <stdio.h>
-
-#ifdef _WIN32
-#include <Windows.h>
-#else
-#include <unistd.h>
-#endif
+#include <thread>
 
 unsigned char chip8_fontset[80] =
 {
@@ -357,7 +352,7 @@ void chip8::emulateCycle()
     }
 
     // TODO: Limit clock cycle to ~60Hz for more accurate emulation
-    Sleep(1000/60 * 0.1);
+    std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000/60 * 0.1)));
 
     // Update timers
     if(delay_timer > 0)
