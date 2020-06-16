@@ -8,13 +8,13 @@
 chip8 myChip8;
 SDL_Renderer* rend;
 SDL_Texture* tex;
-const int scale_factor = 4;
+const int scale_factor = 8;
 
 int main(int argc, char* argv[])
 {
     SDL_Window* window = initGraphics();
 
-    myChip8.loadApplication("C:\\Users\\jjask\\Downloads\\myChip8-bin-src\\pong2.c8");
+    myChip8.loadApplication("C:\\Users\\jjask\\Downloads\\myChip8-bin-src\\sirpinski.c8");
     std::cout << "Loaded program to RAM";
 
     bool quit = false;
@@ -49,15 +49,19 @@ int main(int argc, char* argv[])
         myChip8.emulateCycle();
 
         // Draw each pixel to the screen
-        SDL_UpdateTexture(tex, NULL, pixels, 64 * sizeof(Uint32));
-	    for(int y = 0; y < 32; ++y)		
-		    for(int x = 0; x < 64; ++x)
-			    if(myChip8.gfx[(y * 64) + x] == 1) {
-				    pixels[(y * 64) + x] = 0xFFFFFFFF;
-                }
-                else {
-				    pixels[(y * 64) + x] = 0x00000000;
-                }
+        if (myChip8.drawFlag) {
+            
+	        for(int y = 0; y < 32; ++y)		
+		        for(int x = 0; x < 64; ++x)
+			        if(myChip8.gfx[(y * 64) + x] == 1) {
+				        pixels[(y * 64) + x] = 0xFFFFFFFF;
+                    }
+                    else {
+				        pixels[(y * 64) + x] = 0x00000000;
+                    }
+            SDL_UpdateTexture(tex, NULL, pixels, 64 * sizeof(Uint32));
+            myChip8.drawFlag = false;
+        }
 
         SDL_RenderClear(rend);
         SDL_RenderCopy(rend, tex, NULL, NULL);
@@ -202,7 +206,7 @@ SDL_Window* initGraphics() {
     SDL_RenderSetScale(rend, scale_factor, scale_factor);
 
     tex = SDL_CreateTexture(rend,
-        SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
+        SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING,
         64, 32);
 
     return window;

@@ -363,7 +363,7 @@ void chip8::emulateCycle()
     }
 
     // TODO: Limit clock cycle to ~60Hz for more accurate emulation
-    Sleep(1000/60);
+    Sleep(1000/60 * 0.1);
 
     // Update timers
     if(delay_timer > 0)
